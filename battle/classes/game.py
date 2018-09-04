@@ -2,7 +2,14 @@ import random
 
 
 class bcolors:
-    HEADER = ''
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    END = '\033[0m' #ends the color code
+    UNDERLINE = '\033[4m'
 
 
 class Person:
@@ -64,5 +71,5 @@ class Person:
         i = 1
         print("Magic")
         for spell in self.magic:
-            print(str(i) + ":", spell["name"], "(cost:", str(spell["mp"]) + ")")
+            print(str(i) + ":", spell["name"], "(cost:", str(spell["cost"]) + ")")
             i += 1
