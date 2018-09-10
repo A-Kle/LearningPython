@@ -144,7 +144,19 @@ class Person:
                 smp += " "
             smp += str(self.mp)
 
-        print("                    _________________________        __________")
+        print("                    _________________________          __________")
         print(col.Fore.CYAN + self.name + "    " + col.Style.RESET_ALL + 
         shp + "/" + str(self.maxhp) + "|" + col.Fore.GREEN + hp_bar + col.Style.RESET_ALL + 
         "| " + smp + "/" + str(self.maxmp) + "|" + col.Fore.BLUE + mp_bar + col.Style.RESET_ALL + "|")
+
+    def choose_enemy_spell(self):
+        magic_choice = random.randrange(0, len(self.magic))
+        spell = self.magic[magic_choice]
+        magic_dmg = spell.generate_damage()
+
+        pct = self.hp / self.maxhp * 100
+
+        if self.mp < spell.cost or spell.type == "white" and pct > 50:
+            self.choose_enemy_spell()
+        else:
+            return spell, magic_dmg

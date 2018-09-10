@@ -3,6 +3,7 @@ from classes.magic import Spell
 from classes.inventory import Item
 import colorama as col
 import random
+import re
 
 col.init()
 
@@ -16,6 +17,7 @@ quake = Spell("Quake", 15, 140, "black")
 #white magic
 cure = Spell("Cure", 12, 120, "white")
 cura = Spell("Cura", 18, 1200, "white")
+curamax = Spell("Curamax", 50, 6000, "white")
 
 #create some items
 potion = Item("Potion", "potion", "Heals 50 HP", 50)
@@ -27,6 +29,8 @@ hielixir = Item("Elixir", "eilxir", "Fully restores party's HP/MP", 9999)
 grenade = Item("Grenade", "attack", "Deals 500 damage", 500)
 
 player_magic = [fire, thunder, blizzard, meteor, cure, cura]
+enemy_magic = [fire, meteor, curamax]
+
 player_items = [{"item":potion,"quantity":15},
                 {"item":hipotion, "quantity":5},
                 {"item":superpotion, "quantity":5},
@@ -36,13 +40,13 @@ player_items = [{"item":potion,"quantity":15},
 
 
 #instantiate people
-player1 = Person("Valos:", 3260, 65, 60, 34, player_magic, player_items)
-player2 = Person("Nick: ", 4160, 65, 60, 34, player_magic, player_items)
-player3 = Person("Robot:", 3089, 65, 60, 34, player_magic, player_items)
+player1 = Person("Valos:", 3260, 174, 300, 34, player_magic, player_items)
+player2 = Person("Nick: ", 4160, 132, 311, 34, player_magic, player_items)
+player3 = Person("Robot:", 3089, 144, 288, 34, player_magic, player_items)
 
-enemy1 = Person("Imp    ", 1250, 65, 560, 325, [], [])
-enemy2 = Person("Magus", 11200, 65, 525, 25, [], [])
-enemy3 = Person("Imp    ", 1250, 65, 560, 325, [], [])
+enemy1 = Person("Imp    ", 1250, 130, 560, 325, enemy_magic, [])
+enemy2 = Person("Magus", 11200, 702, 525, 25, enemy_magic, [])
+enemy3 = Person("Imp    ", 1250, 130, 560, 325, enemy_magic, [])
 
 players = [player1, player2, player3]
 enemies = [enemy1, enemy2, enemy3]
@@ -50,7 +54,7 @@ enemies = [enemy1, enemy2, enemy3]
 running = True
 
 while running:
-    print("===========================")
+    print("\n")
     print("NAME                  HP                              MP")
     for player in players:
         player.get_stats()
@@ -102,6 +106,11 @@ while running:
                 enemies[enemy].take_damage(magic_dmg)
 
                 print(col.Fore.BLUE + "\n" + spell.name + " deals", str(magic_dmg), "points of damage to " + enemies[enemy].name.replace(" ", "") + "." + col.Style.RESET_ALL)
+
+                if enemies[enemy].get_hp() == 0:
+                    print(enemies[enemy].name.replace(" ", "") + " has died.")
+                    del enemies[enemy]
+        
         elif index == 2:
             player.choose_item()
             item_choice = int(input("Choose item: ")) - 1
@@ -139,16 +148,7 @@ while running:
                     print(enemies[enemy].name.replace(" ", "") + " has died.")
                     del enemies[enemy]
 
-    enemy_choice = 1
-    target = random.randrange(0, 3)
-    print(col.Fore.RED + "AN ENEMY ATTACKS!" + col.Style.RESET_ALL)
-    enemy_dmg = enemies[0].generate_damage()
-
-    players[target].take_damage(enemy_dmg)
-    print("Enemy attacks for", enemy_dmg, "Player HP", player1.get_hp())
-    print("-----------------------------")
-    print("Enemy HP:", col.Fore.RED + str(enemies[enemy].get_hp()) + "/" + str(enemies[enemy].get_max_hp()) + col.Style.RESET_ALL + "\n")
-
+    #check if battle is over
     defeated_enemies = 0
     defeated_players = 0
 
@@ -160,9 +160,45 @@ while running:
         if player.get_hp() == 0:
             defeated_players += 1
 
+    #check if player won
     if defeated_enemies == 2:
         print(col.Fore.GREEN + "You win!" + col.Style.RESET_ALL)
         running = False
+    #check if enemy won
     elif defeated_players == 2:
         print(col.Fore.RED + "Your enemies have defeated you!" + col.Style.RESET_ALL)
         running = False
+
+    print("\n")
+    print(col.Fore.RED + "AN ENEMY ATTACKS!" + col.Style.RESET_ALL)
+    #enemy attack phase
+    for enemy in enemies:
+        enemy_choice = random.randrange(0, 2)
+        
+        if enemy_choice == 0:
+            #chose attack
+            target = random.randrange(0, 3)
+            
+            enemy_dmg = enemy.generate_damage()
+
+            players[target].take_damage(enemy_dmg)
+            print(col.Fore.RED + enemy.name.replace(" ","") + " attacks " + re.sub("[ :]", "", players[target].name) + " for " + str(enemy_dmg) + "." + col.Style.RESET_ALL)
+    
+        elif enemy_choice == 1:
+            spell, magic_dmg = enemy.choose_enemy_spell()
+            enemy.reduce_mp(spell.cost)
+
+            if spell.type == "white":
+                enemy.heal(magic_dmg)
+
+                print(col.Fore.BLUE + spell.name + " heals " + enemy.name.replace(" ", "") + " for", str(magic_dmg), "HP." + col.Style.RESET_ALL)
+            elif spell.type == "black":
+                target = random.randrange(0, 2)
+                players[target].take_damage(magic_dmg)
+
+                print(col.Fore.BLUE + enemy.name.replace(" ", "") + "'s " + spell.name + " deals", str(magic_dmg), "points of damage to " + re.sub("[ :]", "", players[target].name) + "." + col.Style.RESET_ALL)
+
+                if players[target].get_hp() == 0:
+                    print(players[target].name.replace('[ :]', "") + " has died.")
+                    del players[target]
+           # print("Enemy chose", spell, " damage is ", magic_dmg)
